@@ -2,9 +2,13 @@ version: "3"
 services:
   wolweb:
     container_name: wolweb
-    image: "ghcr.io/sameerdhoot/wolweb"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: "wolweb"
     restart: always
-    
+    cap_add:
+      - NET_ADMIN
     # Make sure that the file exists in local directory from where you are running the compose file;
     # or initialize empty json file by running command "echo '{}' > devices.json".
     volumes:

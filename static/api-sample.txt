@@ -1,5 +1,5 @@
 {
-    "success": true,
-    "message": "Sent magic packet to device Server with Mac 34:E6:D7:33:12:71 on Broadcast IP 192.168.1.255:9",
-    "error": null
+    "error": "",
+    "message": "Device 'Server' with IP '10.1.60.60' is awake. Packet arp ping time '213.903µs'",
+    "success": true
 }

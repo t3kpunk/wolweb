@@ -11,7 +11,7 @@ $(document).ready(function () {
         $('#snackbar > .alert-text > p').text(data.message);
 
         // Check if provided data contains errors
-        if (!data.success || data.error != null) {
+        if (!data.success || !!data.error) {
             $('#snackbar').addClass('alert-error');
             $('#snackbar > .alert-icon > i').addClass('bi-exclamation-triangle-fill');
             $('#snackbar > .alert-text > h5').text("Error");

@@ -52,14 +52,14 @@
                 <h5>Title here</h5>
                 <p style="margin: 0; font-size: calc(var(--bs-body-font-size) - 1pt);">Message here</p>
             </div>
-            
+
         </div>
         <div id="GridDevices"></div>
         <hr>
         <div class="section-header">
             <h3>Wake-up directly using HTTP Requests</h3>
         </div>
-        <h6 style="margin-top: -4px;">/wolweb/wake/<span class="text-secondary">&lt;Device Name&gt;</span>&nbsp;- Returns a JSON object</h6>
+        <h6 style="margin-top: -4px;">/wake/<span class="text-secondary">&lt;Device Name&gt;</span>&nbsp;- Returns a JSON object</h6>
         <div class="code-container ">
             <pre>
                 <code id="code-element" class="language-json"></code>
@@ -105,7 +105,7 @@
         <hr>
         <p style="font-size: 13px;">
             <i class="bi bi-github" style="margin-right: 4px;"></i>
-            Project Page:&nbsp;<a href="https://github.com/sameerdhoot/wolweb">https://github.com/sameerdhoot/wolweb</a>
+            Project Page:&nbsp;<a href="https://github.com/t3kpunk/wolweb">https://github.com/t3kpunk/wolweb</a>
         </p>
     </div>
     <script type="text/javascript" src="static/js/jquery@3.2.1.min.js"></script>
@@ -118,7 +118,7 @@
     <script>
         window.vDir = "{{$.VDir}}"
         window.bCastIP = "{{$.BCastIP}}"
-        
+
         $( "#code-element" ).load( "static/api-sample.txt" , function() {
             hljs.highlightAll();
         });

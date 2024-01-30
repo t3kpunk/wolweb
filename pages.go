@@ -3,7 +3,6 @@ package main
 import (
 	"html/template"
 	"io"
-	"log"
 	"net/http"
 )
 
@@ -23,7 +22,7 @@ func renderHomePage(w http.ResponseWriter, r *http.Request) {
 	}
 	tmpl, _ := template.ParseFiles("index.html")
 	tmpl.Execute(w, pageData)
-	log.Println("Renedered the home page.")
+	// log.Println("Renedered the home page.")
 
 }
 
