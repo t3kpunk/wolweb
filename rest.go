@@ -5,47 +5,15 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/j-keck/arping"
 )
 
 type MsgSerialization struct {
 	Message string `json:"message"`
 	Error   string `json:"error"`
 	Success bool   `json:"success"`
-}
-
-func arpingHost(host string) (string, error) {
-
-	var status string
-	var errMsg error
-
-	ips, err := net.LookupIP(host)
-	if err != nil {
-		status = fmt.Sprintf("Error: device '%s' could not be resolved", host)
-		errMsg = err
-	}
-
-	for idx := range ips {
-		_, time, err := arping.Ping(ips[idx])
-
-		switch {
-		case err == nil:
-			return fmt.Sprintf("Device '%s' with IP '%s' is awake. Packet arp ping time '%s'", host, ips[idx], time), nil
-		case err == arping.ErrTimeout:
-			status = fmt.Sprintf("Device '%s' with IP '%s' is offline", host, ips[idx])
-		case err.Error() == "interrupted system call":
-			status = fmt.Sprintf("Device '%s' with IP '%s' is offline", host, ips[idx])
-		default:
-			status = fmt.Sprintf("Error: '%s' while sending arping to device '%s'", err.Error(), host)
-			// Get root cause in readable format
-			errMsg = fmt.Errorf(err.Error())
-		}
-	}
-	return status, errMsg
 }
 
 // restWakeUpWithDeviceName - REST Handler for Processing URLS /virtualdirectory/apipath/<deviceName>
@@ -68,7 +36,8 @@ func wakeUpWithDeviceName(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	} else {
 		// Get Device from List
-		for _, c := range appData.Devices {
+		for idx, c := range appData.Devices {
+			appData.Devices[idx] = c
 			if c.Name == deviceName {
 				// We found the Devicename
 				if err := SendMagicPacket(c.Mac, c.BroadcastIP, ""); err != nil {

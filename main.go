@@ -7,12 +7,16 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/NYTimes/gziphandler"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/t3kpunk/wolweb/arptable"
+	// "github.com/irai/arp"
+	// "github.com/yaklang/yaklang/common/utils/arptable"
 )
 
 // Global variables
@@ -24,8 +28,10 @@ func main() {
 	setWorkingDir()
 	loadConfig()
 	loadData()
+	initArpTable()
+	updateArpTable()
+	monitorArpTable()
 	setupWebServer()
-
 }
 
 func setWorkingDir() {
@@ -95,7 +101,6 @@ func setupWebServer() {
 	}
 
 	log.Fatal(srv.ListenAndServe())
-
 }
 
 func CacheControlWrapper(h http.Handler) http.Handler {
@@ -103,4 +108,87 @@ func CacheControlWrapper(h http.Handler) http.Handler {
 		w.Header().Set("Cache-Control", "max-age=31536000")
 		h.ServeHTTP(w, r)
 	})
+}
+
+func initArpTable() {
+	arptable.FlushARP()
+	for _, c := range appData.Devices {
+		_, err := arpingHost(c.Name)
+		if err == nil {
+			Ping(c.Name, 1)
+		}
+	}
+}
+
+func inArpTable(mac string) string {
+	arpTable := arptable.Table()
+	for idx := range arpTable {
+		if arpTable[idx] == mac {
+			return Online
+		}
+	}
+	return Offline
+}
+
+func checkAlive(dev Device) string {
+	alive := inArpTable(dev.Mac)
+	if alive == Online {
+		return Online
+	}
+	if alive == Offline {
+		_, err := net.LookupHost(dev.Name)
+		if err != nil {
+			return Death
+		}
+	}
+	return Offline
+}
+
+func monitorArpTable() {
+	go func() {
+		// Infinite scannning devices
+		for {
+			mutex := &sync.Mutex{}
+			mutex.Lock()
+			// NOTE: Dynamic slice. Devices can be added or removed,
+			var lenght = len(appData.Devices)
+			var dev = make([]Device, lenght)
+
+			for idx, c := range appData.Devices {
+				dev[idx] = Device{Name: c.Name, Mac: c.Mac, BroadcastIP: c.BroadcastIP, Alive: checkAlive(c)}
+			}
+			appData.Devices = dev
+			mutex.Unlock()
+			time.Sleep(1200 * time.Millisecond)
+		}
+	}()
+}
+
+func updateArpTable() {
+	go func() {
+		// Infinite scannning devices
+		for {
+			mutex := &sync.Mutex{}
+			mutex.Lock()
+			var lenght = len(appData.Devices)
+			var dev = make([]Device, lenght)
+
+			for idx, c := range appData.Devices {
+				dev[idx] = Device{Name: c.Name, Mac: c.Mac, BroadcastIP: c.BroadcastIP, Alive: c.Alive}
+				if c.Alive == Offline {
+					status, err := arpingHost(c.Name)
+					if err != nil {
+						log.Printf("arp pinging device: %s", status)
+						if Ping(c.Name, 10) {
+							log.Printf("device '%s' is reachable via broadcast ping", c.Name)
+						}
+
+					}
+				}
+			}
+			appData.Devices = dev
+			mutex.Unlock()
+			time.Sleep(12000 * time.Millisecond)
+		}
+	}()
 }

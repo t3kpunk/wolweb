@@ -1,28 +1,101 @@
-version: "3"
+# version: "3"
 services:
   wolweb:
-    container_name: wolweb
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: "wolweb"
-    restart: always
-    cap_add:
-      - NET_ADMIN
+    container_name: wolweb_app
+    #image: "ghcr.io/sameerdhoot/wolweb"
+    image: registry.dev.eftas.com/eftas/wolweb:latest
+    
     # Make sure that the file exists in local directory from where you are running the compose file;
     # or initialize empty json file by running command "echo '{}' > devices.json".
     volumes:
-      - ./devices.json:/wolweb/devices.json
+      - ./devices.json:/app/devices.json
+      #- "/srv/docker/git/wolweb/wolweb:/app/wolweb"
 
     # Have to use host mode as bridge network has issues with UDP broadcast
     # https://github.com/docker/for-linux/issues/637
-    # ports:
-    #   - 12345:8089
+    ports:
+      - 8089:8089
     network_mode: host
-
+    #expose:
+    #  - 8089
+    #labels:
+    #  traefik.enable: true
+    #  traefik.http.routers.wol-websecure.middlewares: wol-chain
+    #  traefik.http.middlewares.wol-chain.chain.middlewares: secHeaders@file
+    #
+    #  traefik.http.routers.wol-websecure.rule: Host(`wol.eftas.services`) # && PathPrefix(`/wolweb/`)
+    #  traefik.http.routers.wol-websecure.entrypoints: websecure
+    #  traefik.http.routers.wol-websecure.tls: true
+    #  traefik.http.routers.wol-websecure.tls.certresolver: httpResolver
+    #  traefik.http.routers.wol-websecure.service: wol-app
+    #
+    #  traefik.http.routers.wol-internal.rule: Host(`wol.eftasgmbh.local`)
+    #  traefik.http.routers.wol-internal.entrypoints: websecure
+    #  traefik.http.routers.wol-internal.tls: true
+    #  traefik.http.routers.wol-internal.service: wol-app
+    #
+    #  traefik.http.services.wol-app.loadbalancer.server.port: 8089
+    #  traefik.docker.network: frontend
+    #cap_add:
+    #  - NET_ADMIN
+    #  - SYS_MODULE
+    # sysctls:
+      # - net.ipv4.icmp_echo_ignore_broadcasts=0
+      # - net.ipv4.icmp_echo_ignore_broadcasts
+      # - net.ipv6.conf.all.disable_ipv6=0
+      # - net.ipv4.ip_forward=1
+      # - net.ipv6.conf.all.forwarding=1
+    #networks:
+    #  frontend:
+    #    ipv4_address: 172.19.0.101
+    #    ipv6_address: fcff:3990:3990::99
+    #  backend:
     # Use environment variable below to change port or virtual directory.
     environment:
       WOLWEBHOST: "0.0.0.0"
       WOLWEBPORT: "8089"
-      #WOLWEBVDIR: "/wolweb"
-      WOLWEBBCASTIP: "192.168.1.255:9"
+      WOLWEBVDIR: "/" #"/wolweb"
+      WOLWEBBCASTIP: "10.1.255.255:9"
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:latest
+    hostname: nginx
+    container_name: "wolweb_frontend"
+    ports:
+      - "8090:8090"
+    networks:
+      frontend:
+        ipv4_address: 172.19.0.101
+      #  ipv6_address: fcff:3990:3990::99
+    # expose:
+    #   - 8090
+    # labels:
+    #   traefik.enable: true
+    #   traefik.http.routers.wol-app.entrypoints: "websecure"
+    #   traefik.http.routers.wol-app.rule: "Host(`wol.eftasgmbh.local`)"
+    #   traefik.http.services.wol-app-service.loadbalancer.server.port: 8090
+    #   traefik.docker.network: "frontend"
+    #   traefik.http.routers.wol-app.middlewares: secHeaders@file 
+      # traefik.http.routers.wol-websecure.middlewares: wol-chain
+      # traefik.http.middlewares.wol-chain.chain.middlewares: secHeaders@file
+    volumes:
+      - ./conf/:/etc/nginx/
+      - /var/www/html:/usr/share/nginx/html
+    restart: unless-stopped
+
+
+networks:
+  frontend:
+    external: true
+    driver: bridge
+    # enable_ipv6: true
+    ipam:
+      config:
+        - subnet: 172.19.0.0/24
+        # - subnet: fcff:3990:3990::/64
+        #   gateway: fcff:3990:3990::1
+  backend:
+    name: backend
+    external: true
+    driver: bridge

@@ -6,6 +6,20 @@
 
 Fork from <https://github.com/sameerdhoot/wolweb>. I wanted to have a json response with the status of device. WOL is a L2 broadcast. To test the L2 connectivity, a arping is send directly after the WOL package.
 
+MACHINE1                         MACHINE2
+   |         +------------+         |
+   |>>>>>>>>-+  TCP Data  +->>>>>>>>|
+   |         +------------+         |
+   |                                |
+   |         +------------+         |
+   |<<<<<<<<-+  TCP ACK   +-<<<<<<<<|
+   |         +------------+         |
+   |                                |
+   |->>>>--------------+            |
+   | ARP ENTRY MACHINE2|            |
+   |-<<<<--------------+            |
+   |                                |
+
 This application is intended do be used in conjunction with a reverse proxy and secured with an SSL certificate. As the intended use case was with home networks, the application has no in-built authentication. While this could pose a slight security risk even if this was hacked to application is intended to be containerised so the attack surface if limited.
 
 I have bookmarked direct link to device(s) on my browsers to wake them using single HTTP call for ease of access.
@@ -90,7 +104,6 @@ You can override the default application configuration by using a config file or
         }
     ]
 }
-
 ```
 
 ## Usage with Docker
@@ -137,6 +150,13 @@ sudo getcap wolweb
 cat /proc/net/arp
 ```
 
+### Cache Timeout
+
+```shell
+cat /proc/sys/net/ipv4/neigh/eth1/base_reachable_time_ms
+30000
+```
+
 ### gratuitous ARP's and WOL using tcpdump
 
 ```shell
@@ -168,18 +188,23 @@ http {
     keepalive_timeout  65;
 
     upstream backend {
-        server mercur:8089;
+        server wol:8089;
     }
 
     server {
-        #server_name wol.eftasgmbh.local;
+        server_name wol.eftasgmbh.local;
         listen 8090 ssl;
-        ssl_certificate /etc/nginx/server.crt;
-        ssl_certificate_key /etc/nginx/server.key;
+        ssl_certificate /etc/nginx/wol.eftasgmbh.local.pem;
+        ssl_certificate_key /etc/nginx/wol.eftasgmbh.local.pem;
         ssl_verify_client off;
+        ssl_protocols TLSv1.2 TLSv1.3;
         # Some security headers...
         add_header X-Frame-Options SAMEORIGIN;
         add_header X-XSS-Protection "1; mode=block";
+        add_header X-Content-Type-Options nosniff;
+        # Disable strict transport security for now. You can uncomment the following
+        # line if you understand the implications.
+        #add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload";
 
         location / {
             limit_except GET HEAD POST { deny all; }
@@ -191,7 +216,124 @@ http {
         }
     }
 }
+```
 
+## docker compose
+
+```shell
+services:
+  wolweb:
+    container_name: wolweb_app
+    #image: "ghcr.io/sameerdhoot/wolweb"
+    image: registry.dev.eftas.com/eftas/wolweb:latest
+
+    # Make sure that the file exists in local directory from where you are running the compose file;
+    # or initialize empty json file by running command "echo '{}' > devices.json".
+    volumes:
+      - ./devices.json:/app/devices.json
+      #- "/srv/docker/git/wolweb/wolweb:/app/wolweb"
+
+    # Have to use host mode as bridge network has issues with UDP broadcast
+    # https://github.com/docker/for-linux/issues/637
+    ports:
+      - 8089:8089
+    network_mode: host
+    #expose:
+    #  - 8089
+    #labels:
+    #  traefik.enable: true
+    #  traefik.http.routers.wol-websecure.middlewares: wol-chain
+    #  traefik.http.middlewares.wol-chain.chain.middlewares: secHeaders@file
+    #
+    #  traefik.http.routers.wol-websecure.rule: Host(`wol.eftas.services`) # && PathPrefix(`/wolweb/`)
+    #  traefik.http.routers.wol-websecure.entrypoints: websecure
+    #  traefik.http.routers.wol-websecure.tls: true
+    #  traefik.http.routers.wol-websecure.tls.certresolver: httpResolver
+    #  traefik.http.routers.wol-websecure.service: wol-app
+    #
+    #  traefik.http.routers.wol-internal.rule: Host(`wol.eftasgmbh.local`)
+    #  traefik.http.routers.wol-internal.entrypoints: websecure
+    #  traefik.http.routers.wol-internal.tls: true
+    #  traefik.http.routers.wol-internal.service: wol-app
+    #
+    #  traefik.http.services.wol-app.loadbalancer.server.port: 8089
+    #  traefik.docker.network: frontend
+    #cap_add:
+    #  - NET_ADMIN
+    #  - SYS_MODULE
+    # sysctls:
+      # - net.ipv4.icmp_echo_ignore_broadcasts=0
+      # - net.ipv4.icmp_echo_ignore_broadcasts
+      # - net.ipv6.conf.all.disable_ipv6=0
+      # - net.ipv4.ip_forward=1
+      # - net.ipv6.conf.all.forwarding=1
+    #networks:
+    #  frontend:
+    #    ipv4_address: 172.19.0.101
+    #    ipv6_address: fcff:3990:3990::99
+    #  backend:
+    # Use environment variable below to change port or virtual directory.
+    environment:
+      WOLWEBHOST: "0.0.0.0"
+      WOLWEBPORT: "8089"
+      WOLWEBVDIR: "/" #"/wolweb"
+      WOLWEBBCASTIP: "10.1.255.255:9"
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:latest
+    hostname: nginx
+    container_name: "webwol_frontend"
+    ports:
+      - "8090:8090"
+    networks:
+     frontend:
+       ipv4_address: 172.19.0.101
+      #  ipv6_address: fcff:3990:3990::99
+    # expose:
+      # - 8090
+    # labels:
+      # traefik.enable: true
+      # traefik.http.routers.wol-websecure.middlewares: wol-chain
+      # traefik.http.middlewares.wol-chain.chain.middlewares: secHeaders@file
+      #
+      # traefik.http.routers.wol.rule: Host(`wol.eftasgmbh.local`) && Path(`/wol`)
+      # traefik.http.routers.wol.entrypoints: websecure
+      # traefik.http.routers.wol.tls: true
+      # traefik.http.routers.wol.service: wol-app
+      #
+      # traefik.http.services.wol-app.loadbalancer.server.port: 8090
+      # traefik.docker.network: frontend
+    volumes:
+      - ./conf/:/etc/nginx/
+      - /var/www/html:/usr/share/nginx/html
+    restart: unless-stopped
+
+
+networks:
+  frontend:
+    external: true
+    driver: bridge
+    # enable_ipv6: true
+    ipam:
+      config:
+        - subnet: 172.19.0.0/24
+        # - subnet: fcff:3990:3990::/64
+        #   gateway: fcff:3990:3990::1
+  backend:
+    name: backend
+    external: true
+    driver: bridge
+```
+
+## Firewall
+
+To deny access to unsecure http web interface, a firewall rule has to be added.
+
+**ufw example**
+
+```shell
+ufw allow from 172.19.0.101 to any port 8089 proto tcp
 ```
 
 > I still have to build and test it op FreeBSD, it should work.

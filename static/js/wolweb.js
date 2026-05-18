@@ -6,7 +6,7 @@ $(document).ready(function () {
         $('#snackbar').removeClass()
         $('#snackbar > .alert-icon > i').removeClass();
         $('#snackbar').addClass('alert hideMe')
-        
+
         // Set alert message
         $('#snackbar > .alert-text > p').text(data.message);
 
@@ -19,13 +19,13 @@ $(document).ready(function () {
             $('#snackbar').addClass('alert-success');
             $('#snackbar > .alert-text > h5').text('Success');
             $('#snackbar > .alert-icon > i').addClass('bi-check-circle-fill')
-            
+
             // After 2 seconds, hide the Div Again
             setTimeout(function () {
                 $('#snackbar').hide();
             }, 2000);
         }
-        
+
         $('#snackbar').show();
     };
 
@@ -101,22 +101,62 @@ function renderData() {
         }
     });
 
+    // Alive / Online Column
+    gridFields.push({
+        name: "alive", title: "Online",
+        type: "text",
+        width: null,
+        editing: false,
+        validate: {
+            validator: "required",
+            message: "Online status is a required field."
+        },
+        itemTemplate: function(alive, item) {
+            var grid = this._grid;
+            switch(alive) {
+            case "online":
+                var $onlineIcon = $("<i>").attr({
+                    class: "bi bi-check-circle text-success",
+                    style: "position: relative; top: -2px; left: -2px;"
+
+                });
+                break;
+            case "offline":
+                var $onlineIcon = $("<i>").attr({
+                    class: "bi bi-x-circle text-danger",
+                    style: "position: relative; top: -2px; left: -2px;"
+                });
+                break;
+            case "death":
+                var $onlineIcon = $("<i>").attr({
+                    class: "bi bi-cone-striped text-warning",
+                    style: "position: relative; top: -2px; left: -2px;"
+                });
+                break
+            default:
+                // code block
+            }
+            return $("<div>").attr({class: "btn-group"})
+                .append($onlineIcon);
+        }
+    });
+
     // Broadcast IP Column
     gridFields.push({
         name: "ip", title: "Broadcast IP",
         type: "text",
         width: null,
+        editing: false,
         validate: {
             validator: "required",
             message: "Broadcast IP Address is a required field."
         },
         insertTemplate: function () {
             var $result = jsGrid.fields.text.prototype.insertTemplate.call(this); // original input
-            // $result.attr("disabled", true).css("background", "lightgray").val(bCastIP);
+            $result.attr("disabled", true).css("background", "lightgray").val(bCastIP);
             $result.val(bCastIP);
             return $result;
-        },
-        // editing: false
+        }
     });
 
     // Wake-up Action Column
@@ -135,7 +175,7 @@ function renderData() {
                 .attr({
                     class: "btn btn-primary btn-sm",
                     type: "button",
-                    title: "Send magic packet" 
+                    title: "Send magic packet"
                 })
                 .append($wakeUpIcon)
                 .append("WAKE-UP")
@@ -150,7 +190,7 @@ function renderData() {
 
     // Modify Data Column
     gridFields.push({
-        name: "control", type: "bscontrol", width: 100, 
+        name: "control", type: "bscontrol", width: 100,
         editButton: false, deleteButton: false, modeSwitchButton: true,
 
         // Button controls when displaying devices
@@ -187,7 +227,7 @@ function renderData() {
                     e.stopPropagation();
                 })
                 .append($deleteIcon);
-    
+
             return $("<div>").attr({class: "btn-group"})
                 .append($customEditButton)
                 .append($customDeleteButton);
@@ -227,7 +267,7 @@ function renderData() {
                     e.stopPropagation();
                 })
                 .append($cancelEditIcon);
-    
+
             return $("<div>").attr({class: "btn-group"})
                 .append($customUpdateButton)
                 .append($customCancelEditButton);
@@ -267,13 +307,13 @@ function renderData() {
                 })
                 .click(function(e) {
                     grid.clearInsert();
-                    
+
                     isInserting = false;
                     grid.option("inserting", isInserting);
                     e.stopPropagation();
                 })
                 .append($clearInsertIcon);
-    
+
             return $("<div>").attr({class: "btn-group"})
                 .append($customInsertButton)
                 .append($customCancelEditButton);
@@ -342,7 +382,7 @@ function renderData() {
         noDataContent: "No devices found",
 
         pageIndex: 1,
-        pageSize: 15,
+        pageSize: 100,
         pagerFormat: "Pages: {prev} {pages} {next}",
 
         confirmDeleting: true,
@@ -450,7 +490,7 @@ function getTextNodesIn(node, includeWhitespaceNodes) {
 }
 
 
-/* 
+/*
 This function converts the inbuilt pager into a comparable bootstrap
 object. This must be executed on each refresh of the page.
 */
@@ -493,3 +533,16 @@ function performBSPagerConversion() {
         }
     });
 }
+
+
+
+/*bi bi-check
+
+<button type="button" class="btn btn-outline-success btn-floating">
+  <i class="fas fa-star"></i>
+</button>
+<button type="button" class="btn btn-danger btn-floating">
+  <i class="fas fa-magic"></i>
+</button>
+
+*/

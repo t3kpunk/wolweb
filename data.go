@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 )
 
@@ -18,6 +19,8 @@ func loadData() {
 
 	devicesDecoder := json.NewDecoder(devicesFile)
 	decodeErr := devicesDecoder.Decode(&appData)
+	sortData()
+
 	if decodeErr != nil {
 		log.Fatalf("Error decoding devices.json file. \"%s\"", decodeErr)
 	}
@@ -25,6 +28,13 @@ func loadData() {
 	log.Printf("Application data loaded from devices.json")
 	log.Println(" - devices defined in devices.json: ", len(appData.Devices))
 	devicesFile.Close()
+}
+
+func sortData() {
+	// sort the list
+	sort.Slice(appData.Devices, func(i, j int) bool {
+		return appData.Devices[i].Name < appData.Devices[j].Name
+	})
 }
 
 func saveData(w http.ResponseWriter, r *http.Request) {
@@ -36,6 +46,7 @@ func saveData(w http.ResponseWriter, r *http.Request) {
 	log.Printf("New Application data received for saving to disk")
 	file, fileErr := os.OpenFile("devices.json", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
 	decoderErr := json.NewDecoder(r.Body).Decode(&appData)
+	sortData()
 
 	baseErrStr := "Unable to save data to disk. "
 

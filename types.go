@@ -12,6 +12,7 @@ type Device struct {
 	Name        string `json:"name"`
 	Mac         string `json:"mac"`
 	BroadcastIP string `json:"ip"`
+	Alive       string `json:"alive"`
 }
 
 // AppData is list of Computer objects defined in JSON config file
@@ -21,8 +22,15 @@ type AppData struct {
 
 // AppConfig represents a configuration object to initialize this application
 type AppConfig struct {
-	Host    string `json:"host" env:"WOLWEBHOST" env-default:"0.0.0.0"`
-	Port    int    `json:"port" env:"WOLWEBPORT" env-default:"8089"`
-	VDir    string `json:"vdir" env:"WOLWEBVDIR" env-default:"/wolweb"`
-	BCastIP string `json:"bcastip" env:"WOLWEBBCASTIP" env-default:"192.168.1.255:9"`
+	Host    string `json:"host"    env:"WOLWEBHOST"    env-default:"0.0.0.0"`
+	Port    int    `json:"port"    env:"WOLWEBPORT"    env-default:"8089"`
+	VDir    string `json:"vdir"    env:"WOLWEBVDIR"    env-default:"/wolweb"`
+	BCastIP string `json:"bcastip" env:"WOLWEBBCASTIP" env-default:"10.1.255.255:9"`
+	Alive   string `json:"alive"   env:""              env-default:"offline"`
 }
+
+const (
+	Online  string = "online"
+	Offline string = "offline"
+	Death   string = "death"
+)
