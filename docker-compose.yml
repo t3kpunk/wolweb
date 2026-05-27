@@ -4,7 +4,7 @@ services:
     container_name: wolweb_app
     #image: "ghcr.io/sameerdhoot/wolweb"
     image: registry.dev.eftas.com/eftas/wolweb:latest
-    
+
     # Make sure that the file exists in local directory from where you are running the compose file;
     # or initialize empty json file by running command "echo '{}' > devices.json".
     volumes:
@@ -55,7 +55,7 @@ services:
       WOLWEBHOST: "0.0.0.0"
       WOLWEBPORT: "8089"
       WOLWEBVDIR: "/" #"/wolweb"
-      WOLWEBBCASTIP: "10.1.255.255:9"
+      WOLWEBBCASTIP: "10.10.10.255:9"
     restart: unless-stopped
 
   nginx:
@@ -76,7 +76,7 @@ services:
     #   traefik.http.routers.wol-app.rule: "Host(`wol.eftasgmbh.local`)"
     #   traefik.http.services.wol-app-service.loadbalancer.server.port: 8090
     #   traefik.docker.network: "frontend"
-    #   traefik.http.routers.wol-app.middlewares: secHeaders@file 
+    #   traefik.http.routers.wol-app.middlewares: secHeaders@file
       # traefik.http.routers.wol-websecure.middlewares: wol-chain
       # traefik.http.middlewares.wol-chain.chain.middlewares: secHeaders@file
     volumes:

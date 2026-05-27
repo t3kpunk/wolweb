@@ -6,9 +6,8 @@
 # */
 #####
 
-# SERVER_ACCES="root@dev3.eftas.com"
+
 SERVER_ACCES="mercur@mercur.eftasgmbh.local"
-# SERVER_ACCES="root@at.cropanalyzer.agrosurvey-staging.eftas.services"
 APP_DIR="/usr/app"
 PROJECT_DIR="/srv/docker/files/wolweb"
 

@@ -25,7 +25,7 @@ type AppConfig struct {
 	Host    string `json:"host"    env:"WOLWEBHOST"    env-default:"0.0.0.0"`
 	Port    int    `json:"port"    env:"WOLWEBPORT"    env-default:"8089"`
 	VDir    string `json:"vdir"    env:"WOLWEBVDIR"    env-default:"/wolweb"`
-	BCastIP string `json:"bcastip" env:"WOLWEBBCASTIP" env-default:"10.1.255.255:9"`
+	BCastIP string `json:"bcastip" env:"WOLWEBBCASTIP" env-default:"10.10.10.255:9"`
 	Alive   string `json:"alive"   env:""              env-default:"offline"`
 }
 

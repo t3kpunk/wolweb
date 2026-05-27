@@ -14,12 +14,11 @@ COPY static ./static
 
 
 # Install Dependecies
-RUN apk add --no-cache git
-    #apk update && apk upgrade && \
-    #apk add --no-cache git && \
-    #git clone https://github.com/t3kpunk/wolweb . && \
-RUN go mod tidy && \
-    go mod download
+RUN apk update && apk upgrade && \
+    apk add --no-cache git \
+    # && git clone https://github.com/t3kpunk/wolweb . \
+    && go mod tidy \
+    && go mod download
 
 
 # Build Source Files

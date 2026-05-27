@@ -56,7 +56,7 @@ The application will use the following default values if they are not explicitly
 | Host | Define the host address on which the webserver will listen | **0.0.0.0**
 | Port | Define the port on which the webserver will listen | **8089**
 | Virtual Directory | A virtual directory to mount this application under | **/wolweb**
-| Broadcast IP and Port | This is broadcast IP address and port for the local network. *Please include the port :9* | **10.1.255.255:9**
+| Broadcast IP and Port | This is broadcast IP address and port for the local network. *Please include the port :9* | **10.10.10.255:9**
 
 You can override the default application configuration by using a config file or by setting environment variables. The application will first load values from config file and look for environment variables and overwrites values from the file with the values which were found in the environment.
 
@@ -67,7 +67,7 @@ You can override the default application configuration by using a config file or
     "host": "0.0.0.0",
     "port": 8089,
     "vdir": "/",
-    "bcastip": "10.1.255.255:9"
+    "bcastip": "10.10.10.255:9"
 }
 ```
 
@@ -90,17 +90,17 @@ You can override the default application configuration by using a config file or
         {
             "name": "Server",
             "mac": "34:E6:D7:33:12:71",
-            "ip": "10.1.255.255:9"
+            "ip": "10.10.10.255:9"
         },
         {
             "name": "NAS",
             "mac": "28:C6:8E:36:DC:38",
-            "ip": "10.1.255.255:9"
+            "ip": "10.10.10.255:9"
         },
         {
             "name": "Laptop",
             "mac": "18:1D:EA:70:A0:21",
-            "ip": "10.1.255.255:9"
+            "ip": "10.10.10.255:9"
         }
     ]
 }
@@ -277,7 +277,7 @@ services:
       WOLWEBHOST: "0.0.0.0"
       WOLWEBPORT: "8089"
       WOLWEBVDIR: "/" #"/wolweb"
-      WOLWEBBCASTIP: "10.1.255.255:9"
+      WOLWEBBCASTIP: "10.10.10.255:9"
     restart: unless-stopped
 
   nginx:

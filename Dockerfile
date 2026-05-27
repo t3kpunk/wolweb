@@ -6,12 +6,13 @@ LABEL org.label-schema.vcs-url="https://github.com/t3kpunk/wolweb" \
 
 WORKDIR /app
 
+
 # Install Dependecies
-RUN apk update && apk upgrade && \
-    apk add --no-cache git && \
-    git clone https://github.com/t3kpunk/wolweb . && \
-    go mod tidy && \
-    go mod download
+RUN apk update && apk upgrade  \
+    && apk add --no-cache git \
+    && git clone https://github.com/t3kpunk/wolweb . \
+    && go mod tidy \
+    && go mod download
 
 # Build Source Files
 RUN go build -o wolweb .
